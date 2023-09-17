@@ -6,20 +6,14 @@
 }
 :root {
   padding: 5vh 5vw;
-  background-color: #e6c998;
+  background-color: rgb(254, 254, 248);
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-image: radial-gradient(center, #7c6f59, transparent);
 }
 :root::before {
-  position: fixed;
   content: "";
-  top: 0;
-  bottom: 0;
-  right: 0;
-  left: 0;
   opacity: 0.8;
-  background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/49914/grit-fs8.png);
 }
 body {
   display: flex;
@@ -35,6 +29,8 @@ body {
 }
 .App {
   display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .rack {
   display: flex;
@@ -59,6 +55,9 @@ body {
   border-right-color: rgba(0, 0, 0, 0.15);
   border-bottom-color: rgba(0, 0, 0, 0.3);
   border-radius: 0.75mm;
+}
+.rack .tile:hover {
+  cursor: pointer;
 }
 .rack .tile[data-letter]::before {
   content: attr(data-letter);
@@ -143,6 +142,7 @@ body {
 
 .all {
   margin-top: 12.5mm;
+  margin-left: 20mm;
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
@@ -167,6 +167,9 @@ body {
   border-right-color: rgba(0, 0, 0, 0.15);
   border-bottom-color: rgba(0, 0, 0, 0.3);
   border-radius: 0.375mm;
+}
+.all .tile:hover {
+  cursor: pointer;
 }
 .all .tile[data-letter]::before {
   content: attr(data-letter);
@@ -264,15 +267,70 @@ body {
   background-color: white; /* set the grid background color to white */
   gap: 2px; /* adjust this to create a small white space between cells */
   margin-top: 0;
+
 }
 
 .grid-cell {
-  background-color: rgb(108, 108, 213); /* set the cell background color */
+  background-color: rgb(112, 112, 225); /* set the cell background color */
   width: 9.5mm; /* adjust the width to match the tile size */
   height: 9.5mm; /* adjust the height to match the tile size */
-  border: 1px solid purple; /* add a thin purple border to each cell */
+  border: 2px solid rgb(127, 0, 127); /* add a thin purple border to each cell */
   display: flex;
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.7);
+
+}
+
+.grid-cell:hover {
+  cursor: pointer;
+}
+
+.board-container {
+  position: flex;
+}
+
+.grid-tile {
+  background-color: #f5cf90;
+  background-image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/49914/veneer-birch-texture-fs8.png');
+  position: relative;
+  width: 10mm;
+  height: 10mm;
+  box-sizing: border-box;
+  box-shadow: 0 0.5625mm 0.375mm -0.25mm rgba(0, 0, 0, 0.4);
+  border-style: solid;
+  border-top-width: 0.375mm;
+  border-left-width: 1px;
+  border-right-width: 1px;
+  border-bottom-width: 0.5625mm;
+  border-top-color: rgba(255, 255, 255, 0.45);
+  border-left-color: rgba(255, 255, 255, 0.25);
+  border-right-color: rgba(0, 0, 0, 0.15);
+  border-bottom-color: rgba(0, 0, 0, 0.3);
+  border-radius: 0.375mm;
+  cursor: pointer;
+}
+
+.grid-tile[data-letter]::before {
+  content: attr(data-letter);
+  text-transform: uppercase;
+  font-family: Oswald, sans-serif;
+  font-size: 6.65mm;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(0, 0, 0, 0.6);
+  text-shadow: 4px 4px 6px #f5cf90, 0 0 0 rgba(0, 0, 0, 0.7), 1px 2px 1px rgba(255, 255, 255, 0.5);
+}
+
+.grid-tile.small-font[data-letter]::before {
+  font-size: 0.7em;
+}
+
+.rack .tile[data-letter='='],
+.all .tile[data-letter='='],
+.grid-tile[data-letter='='] {
+  background-color: #ededed; /* This is a slightly off-white color */
+  background-image: none;
 }
