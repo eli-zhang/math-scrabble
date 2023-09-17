@@ -38,7 +38,7 @@ body {
 }
 .rack .tile {
   margin: 1mm / 2;
-  background-color: #f5cf90;
+  background-color: rgb(245, 207, 144);
   background-image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/49914/veneer-birch-texture-fs8.png');
   position: relative;
   width: 19mm;
@@ -79,6 +79,10 @@ body {
   right: 15%;
   bottom: 15%;
   transform: translate(50%, 50%);
+}
+.rack .tile[data-letter=' ']::after,
+.rack .tile[data-letter='=']::after {
+  content: "0";
 }
 .rack .tile[data-letter='+']::after,
 .rack .tile[data-letter='0']::after,
@@ -140,7 +144,7 @@ body {
   content: "12";
 }
 
-.all {
+.hand {
   margin-top: 12.5mm;
   margin-left: 20mm;
   display: flex;
@@ -149,8 +153,8 @@ body {
   width: 103.55mm;
   height: 103.55mm;
 }
-.all .tile {
-  background-color: #f5cf90;
+.hand .tile {
+  background-color: rgb(245, 207, 144);
   background-image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/49914/veneer-birch-texture-fs8.png');
   position: relative;
   width: 9.5mm;
@@ -168,10 +172,10 @@ body {
   border-bottom-color: rgba(0, 0, 0, 0.3);
   border-radius: 0.375mm;
 }
-.all .tile:hover {
+.hand .tile:hover {
   cursor: pointer;
 }
-.all .tile[data-letter]::before {
+.hand .tile[data-letter]::before {
   content: attr(data-letter);
   text-transform: uppercase;
   font-family: Oswald, sans-serif;
@@ -183,7 +187,7 @@ body {
   color: rgba(0, 0, 0, 0.6);
   text-shadow: 4px 4px 6px #f5cf90, 0 0 0 rgba(0, 0, 0, 0.7), 1px 2px 1px rgba(255, 255, 255, 0.5);
 }
-.all .tile[data-letter]::after {
+.hand .tile[data-letter]::after {
   color: rgba(0, 0, 0, 0.7);
   font-family: sans-serif;
   font-size: 2.1375mm;
@@ -192,71 +196,75 @@ body {
   bottom: 15%;
   transform: translate(50%, 50%);
 }
-.all .tile[data-letter='+']::after,
-.all .tile[data-letter='0']::after,
-.all .tile[data-letter='1']::after,
-.all .tile[data-letter='2']::after,
-.all .tile[data-letter='3']::after,
-.all .tile[data-letter='4']::after,
-.all .tile[data-letter='5']::after {
+.hand .tile[data-letter=' ']::after,
+.hand .tile[data-letter='=']::after {
+  content: "0";
+}
+.hand .tile[data-letter='+']::after,
+.hand .tile[data-letter='0']::after,
+.hand .tile[data-letter='1']::after,
+.hand .tile[data-letter='2']::after,
+.hand .tile[data-letter='3']::after,
+.hand .tile[data-letter='4']::after,
+.hand .tile[data-letter='5']::after {
   content: "1";
 }
-.all .tile[data-letter='-']::after,
-.all .tile[data-letter='6']::after,
-.all .tile[data-letter='7']::after,
-.all .tile[data-letter='8']::after,
-.all .tile[data-letter='9']::after,
-.all .tile[data-letter='2/2']::after,
-.all .tile[data-letter='3/3']::after,
-.all .tile[data-letter='4/4']::after,
-.all .tile[data-letter='6/6']::after {
+.hand .tile[data-letter='-']::after,
+.hand .tile[data-letter='6']::after,
+.hand .tile[data-letter='7']::after,
+.hand .tile[data-letter='8']::after,
+.hand .tile[data-letter='9']::after,
+.hand .tile[data-letter='2/2']::after,
+.hand .tile[data-letter='3/3']::after,
+.hand .tile[data-letter='4/4']::after,
+.hand .tile[data-letter='6/6']::after {
   content: "2";
 }
-.all .tile[data-letter='×']::after {
+.hand .tile[data-letter='×']::after {
   content: "3";
 }
-.all .tile[data-letter='1/2']::after {
+.hand .tile[data-letter='1/2']::after {
   content: "4";
 }
-.all .tile[data-letter='÷']::after,
-.all .tile[data-letter='5/2']::after,
-.all .tile[data-letter='2/4']::after,
-.all .tile[data-letter='3/6']::after {
+.hand .tile[data-letter='÷']::after,
+.hand .tile[data-letter='5/2']::after,
+.hand .tile[data-letter='2/4']::after,
+.hand .tile[data-letter='3/6']::after {
   content: "5";
 }
 
-.all .tile[data-letter='1/4']::after,
-.all .tile[data-letter='3/4']::after {
+.hand .tile[data-letter='1/4']::after,
+.hand .tile[data-letter='3/4']::after {
   content: "6";
 }
 
-.all .tile[data-letter='7/4']::after {
+.hand .tile[data-letter='7/4']::after {
   content: "7";
 }
 
-.all .tile[data-letter='1/3']::after,
-.all .tile[data-letter='2/3']::after {
+.hand .tile[data-letter='1/3']::after,
+.hand .tile[data-letter='2/3']::after {
   content: "8";
 }
 
-.all .tile[data-letter='2/6']::after,
-.all .tile[data-letter='4/6']::after {
+.hand .tile[data-letter='2/6']::after,
+.hand .tile[data-letter='4/6']::after {
   content: "9";
 }
 
-.all .tile[data-letter='1/6']::after {
+.hand .tile[data-letter='1/6']::after {
   content: "10";
 }
 
-.all .tile[data-letter='5/6']::after {
+.hand .tile[data-letter='5/6']::after {
   content: "12";
 }
 
-.all .tile.small-font[data-letter]::before {
+.hand .tile.small-font[data-letter]::before {
   font-size: 0.7em;
 }
 
-.all .tile.small-font[data-letter]::after {
+.hand .tile.small-font[data-letter]::after {
   font-size: 0.7em;
 }
 
@@ -271,7 +279,7 @@ body {
 }
 
 .grid-cell {
-  background-color: rgb(112, 112, 225); /* set the cell background color */
+  background-color: rgb(108, 108, 213); /* set the cell background color */
   width: 9.5mm; /* adjust the width to match the tile size */
   height: 9.5mm; /* adjust the height to match the tile size */
   border: 2px solid rgb(127, 0, 127); /* add a thin purple border to each cell */
@@ -284,6 +292,26 @@ body {
 
 .grid-cell:hover {
   cursor: pointer;
+}
+
+.grid-cell {
+  background-color: rgb(108, 108, 213); /* default color */
+}
+
+.grid-cell.space-3E {
+  background-color: rgb(173, 44, 158);
+}
+
+.grid-cell.space-3S {
+  background-color: rgb(7, 104, 86);
+}
+
+.grid-cell.space-2E {
+  background-color: rgb(80, 22, 121); 
+}
+
+.grid-cell.space-2S {
+  background-color: rgb(44, 60, 178);
 }
 
 .board-container {
@@ -328,9 +356,96 @@ body {
   font-size: 0.7em;
 }
 
+.grid-tile[data-letter]::after {
+  color: rgba(0, 0, 0, 0.7);
+  font-family: sans-serif;
+  font-size: 2.1375mm;
+  position: absolute;
+  right: 15%;
+  bottom: 15%;
+  transform: translate(50%, 50%);
+}
+
+.grid-tile[data-letter=' ']::after,
+.grid-tile[data-letter='=']::after {
+  content: "0";
+}
+.grid-tile[data-letter='+']::after,
+.grid-tile[data-letter='0']::after,
+.grid-tile[data-letter='1']::after,
+.grid-tile[data-letter='2']::after,
+.grid-tile[data-letter='3']::after,
+.grid-tile[data-letter='4']::after,
+.grid-tile[data-letter='5']::after {
+  content: "1";
+}
+.grid-tile[data-letter='-']::after,
+.grid-tile[data-letter='6']::after,
+.grid-tile[data-letter='7']::after,
+.grid-tile[data-letter='8']::after,
+.grid-tile[data-letter='9']::after,
+.grid-tile[data-letter='2/2']::after,
+.grid-tile[data-letter='3/3']::after,
+.grid-tile[data-letter='4/4']::after,
+.grid-tile[data-letter='6/6']::after {
+  content: "2";
+}
+.grid-tile[data-letter='×']::after {
+  content: "3";
+}
+.grid-tile[data-letter='1/2']::after {
+  content: "4";
+}
+.grid-tile[data-letter='÷']::after,
+.grid-tile[data-letter='5/2']::after,
+.grid-tile[data-letter='2/4']::after,
+.grid-tile[data-letter='3/6']::after {
+  content: "5";
+}
+
+.grid-tile[data-letter='1/4']::after,
+.grid-tile[data-letter='3/4']::after {
+  content: "6";
+}
+
+.grid-tile[data-letter='7/4']::after {
+  content: "7";
+}
+
+.grid-tile[data-letter='1/3']::after,
+.grid-tile[data-letter='2/3']::after {
+  content: "8";
+}
+
+.grid-tile[data-letter='2/6']::after,
+.grid-tile[data-letter='4/6']::after {
+  content: "9";
+}
+
+.grid-tile[data-letter='1/6']::after {
+  content: "10";
+}
+
+.grid-tile[data-letter='5/6']::after {
+  content: "12";
+}
+
+.grid-tile.small-font[data-letter]::before {
+  font-size: 0.7em;
+}
+
+.grid-tile.small-font[data-letter]::after {
+  font-size: 0.7em;
+}
+
 .rack .tile[data-letter='='],
-.all .tile[data-letter='='],
+.hand .tile[data-letter='='],
 .grid-tile[data-letter='='] {
   background-color: #ededed; /* This is a slightly off-white color */
   background-image: none;
+}
+
+.hand .tile.used {
+  background-color: gray;
+  pointer-events: none;
 }
