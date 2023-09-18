@@ -38,15 +38,5 @@ export const configureTiles = () => {
   forEach(rackTiles, function(el) {
   el.style.transform = "rotate("+ rc0(5) +"deg)";
   });
-
-  // randomize the background-color of the all the tiles
-  forEach(tiles, function(el) {
-  var s = el.style, cs = window.getComputedStyle(el), amt = r();
-  s.backgroundColor = tinycolor(cs.backgroundColor)
-    .darken(amt*20)
-    .desaturate(amt*30)
-    .toHexString();
-  });
-
 }
 

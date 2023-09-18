@@ -451,6 +451,11 @@ body {
   pointer-events: none;
 }
 
+.hand .tile.rerolling {
+  background-color: green;
+  pointer-events: none;
+}
+
 .hand-buttons {
   display: flex;
   justify-content: space-between;
@@ -464,6 +469,11 @@ body {
   box-sizing: border-box; /* Include padding and border in element's total width and height */
   height: 50px;
 }
+
+.hand-button.active {
+  background-color: rgb(56, 179, 56);
+}
+
 
 .hand-button:hover {
   cursor: pointer;

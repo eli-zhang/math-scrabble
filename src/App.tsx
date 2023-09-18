@@ -44,10 +44,14 @@ function App() {
 
   const [selectedTile, setSelectedTile] = React.useState<string | null>(null);
   const [placedTiles, setPlacedTiles] = React.useState<string[][]>(initialPlacedTiles);
+  const [permaPlacedTiles, setPermaPlacedTiles] = React.useState<string[][]>(initialPlacedTiles);
   const [boardToRender, setBoardToRender] = React.useState<string[][]>(boardLayout);
   const [pendingTilePositions, setPendingTilePositions] = React.useState<boolean[][]>(initialTilePositions);
   const [totalScore, setTotalScore] = React.useState<number>(0);
   const [currSelectedIdx, setCurrSelectedIdx] = React.useState<number>(-1);
+
+  const [tileIdxsToReroll, setTileIdxsToReroll] = React.useState<number[]>([]);
+  const [rerolling, setRerolling] = React.useState<boolean>(false);
 
   function deepCopy(arr: any[]) {
     let copy: any[] = [];
@@ -62,6 +66,14 @@ function App() {
   }
 
   const handleTileInHandClick = (letter: string, index: number) => {
+    if (rerolling) {
+      if (tileIdxsToReroll.includes(index)) {
+        setTileIdxsToReroll(tileIdxsToReroll.filter(i => i !== index));
+      } else {
+        setTileIdxsToReroll([...tileIdxsToReroll, index]);
+      }
+      return;
+    }
     if (!usedTilesInHandIdx.includes(index)) {
       setSelectedTile(letter);
       setCurrSelectedIdx(index);
@@ -151,6 +163,54 @@ function App() {
     }
   };
 
+  const handleReroll = () => {
+    const newHand = [...currentHand];
+    tileIdxsToReroll.forEach(index => {
+      if (index < 1) { // Skip first tile.
+        return;
+      }
+      const newTile = allTiles[Math.floor(Math.random() * allTiles.length)];
+      newHand[index] = newTile;
+    });
+    setCurrentHand(newHand);
+    setTileIdxsToReroll([]);
+  };
+
+  const lockInPlacedTiles = () => {
+    const newPermaPlacedTiles = deepCopy(permaPlacedTiles);
+    placedTiles.forEach((row, rowIndex) => {
+      row.forEach((cellContent, colIndex) => {
+        if (cellContent !== "") {
+          newPermaPlacedTiles[rowIndex][colIndex] = cellContent;
+        }
+      });
+    });
+    setPermaPlacedTiles(newPermaPlacedTiles);
+  }
+
+  const handleSubmit = () => {
+    if (rerolling) {
+      handleReroll();
+      setRerolling(false);
+      return;
+    }
+
+    const newHand = [...currentHand];
+    usedTilesInHandIdx.forEach(index => {
+      if (index === 0) { // The first tile is always an equals.
+        newHand[index] = "=";
+        return;
+      }
+      const newTile = allTiles[Math.floor(Math.random() * allTiles.length)];
+      newHand[index] = newTile;
+    });
+    setCurrentHand(newHand);
+    lockInPlacedTiles();
+    setUsedTilesInHandIdx([]);
+    setPlacedTiles(initialPlacedTiles);
+    setPendingTilePositions(initialTilePositions);
+  }
+
   const getCurrentPlayScore = () => {
     let sum = 0;
     let multiplier = 1; // initialize multiplier to 1
@@ -189,9 +249,17 @@ function App() {
       });
     });
 
+    permaPlacedTiles.forEach((row, rowIndex) => {
+      row.forEach((cellContent, colIndex) => {
+        if (cellContent !== "") {
+          newBoardToRender[rowIndex][colIndex] = cellContent;
+        }
+      });
+    });
+
     setBoardToRender(newBoardToRender);
     setTotalScore(getCurrentPlayScore());
-  }, [placedTiles])
+  }, [placedTiles, permaPlacedTiles])
 
   return (
     <div className="App">
@@ -236,7 +304,7 @@ function App() {
 
             <div
               key={index}
-              className={`tile ${tile.length > 1 ? 'small-font' : ''}${tile === "=" ? 'equals' : ''} ${usedTilesInHandIdx.includes(index) ? 'used' : ''}`}
+              className={`tile ${tile.length > 1 ? 'small-font' : ''} ${tile === "=" ? 'equals' : ''} ${usedTilesInHandIdx.includes(index) ? 'used' : ''} ${tileIdxsToReroll.includes(index) ? 'rerolling' : ''}`}
               data-letter={tile}
               onClick={() => handleTileInHandClick(tile, index)}
             />
@@ -244,8 +312,8 @@ function App() {
 
         <div className="hand-buttons">
           <button className="hand-button" onClick={() => {handleReset()}}>Reset</button>
-          <button className="hand-button">Submit</button>
-          <button className="hand-button">Reroll</button>
+          <button className="hand-button" onClick={() => {handleSubmit()}}>Submit</button>
+          <button className={`hand-button ${rerolling ? 'active' : ''}`} onClick={() => {setRerolling(!rerolling)}}>Reroll</button>
         </div>
       </div>
     </div>
