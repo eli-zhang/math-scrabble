@@ -474,7 +474,20 @@ body {
   background-color: rgb(56, 179, 56);
 }
 
-
 .hand-button:hover {
   cursor: pointer;
+}
+
+.score-table {
+  border-collapse: collapse; /* This reduces the spacing between rows */
+}
+
+.score-table th {
+  border-bottom: 1px solid #000; /* This draws a thin line under the thead */
+}
+
+.score-table td, .score-table th {
+  padding-left: 10px; 
+  padding-right: 10px; 
+
 }

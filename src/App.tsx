@@ -43,12 +43,13 @@ function App() {
   const initialTilePositions: boolean[][] = Array.from({length: 19}, () => Array(19).fill(false));
 
   const [selectedTile, setSelectedTile] = React.useState<string | null>(null);
-  const [placedTiles, setPlacedTiles] = React.useState<string[][]>(initialPlacedTiles);
-  const [permaPlacedTiles, setPermaPlacedTiles] = React.useState<string[][]>(initialPlacedTiles);
+  const [placedTiles, setPlacedTiles] = React.useState<string[][]>(deepCopy(initialPlacedTiles));
+  const [permaPlacedTiles, setPermaPlacedTiles] = React.useState<string[][]>(deepCopy(initialPlacedTiles));
   const [boardToRender, setBoardToRender] = React.useState<string[][]>(boardLayout);
   const [pendingTilePositions, setPendingTilePositions] = React.useState<boolean[][]>(initialTilePositions);
-  const [totalScore, setTotalScore] = React.useState<number>(0);
   const [currSelectedIdx, setCurrSelectedIdx] = React.useState<number>(-1);
+  const [roundScore, setRoundScore] = React.useState<number>(0);
+  const [roundScores, setRoundScores] = React.useState<number[]>([]);
 
   const [tileIdxsToReroll, setTileIdxsToReroll] = React.useState<number[]>([]);
   const [rerolling, setRerolling] = React.useState<boolean>(false);
@@ -143,6 +144,59 @@ function App() {
     return true;
   }
 
+  const validateRowColumn = () => {
+    const allPlacedTiles = deepCopy(permaPlacedTiles);
+    placedTiles.forEach((row, rowIndex) => {
+      row.forEach((cellContent, colIndex) => {
+        if (cellContent !== "") {
+          allPlacedTiles[rowIndex][colIndex] = cellContent;
+        }
+      });
+    });
+
+    for (let row = 0; row < allPlacedTiles.length; row++) {
+      let trueCount = pendingTilePositions[row].filter(val => val === true).length;
+      if (trueCount > 1) {
+        let group = [];
+        for (let col = 0; col < allPlacedTiles[0].length; col++) {
+          if (placedTiles[row][col] !== "") {
+            group.push(allPlacedTiles[row][col]);
+          } else {
+            if (group.length > 0 && !group.includes("=")) {
+              return false;
+            }
+            group = [];
+          }
+        }
+        if (group.length > 0 && !group.includes("=")) {
+          return false;
+        }
+      }
+    }
+  
+    for (let col = 0; col < allPlacedTiles[0].length; col++) {
+      let trueCount = pendingTilePositions.reduce((count, row) => row[col] ? count + 1 : count, 0);
+      if (trueCount > 1) {
+        let group = [];
+        for (let row = 0; row < allPlacedTiles.length; row++) {
+          if (allPlacedTiles[row][col] !== "") {
+            group.push(allPlacedTiles[row][col]);
+          } else {
+            if (group.length > 1 && !group.includes("=")) {
+              return false;
+            }
+            group = [];
+          }
+        }
+        if (group.length > 1 && !group.includes("=")) {
+          return false;
+        }
+      }
+    }
+  
+    return true;
+  }
+
   const handleCellClick = (rowIndex: number, colIndex: number) => {
     if (selectedTile) {
       const newPendingTilePositions = deepCopy(pendingTilePositions);
@@ -192,6 +246,13 @@ function App() {
     if (rerolling) {
       handleReroll();
       setRerolling(false);
+      handleReset();
+      setRoundScores([...roundScores, 0]);
+      return;
+    }
+
+    if (!validateRowColumn()) {
+      alert("Each group of tiles must contain an '=' tile.");
       return;
     }
 
@@ -205,6 +266,7 @@ function App() {
       newHand[index] = newTile;
     });
     setCurrentHand(newHand);
+    setRoundScores([...roundScores, roundScore]);
     lockInPlacedTiles();
     setUsedTilesInHandIdx([]);
     setPlacedTiles(initialPlacedTiles);
@@ -220,7 +282,6 @@ function App() {
           const placedTile = placedTiles[rowIndex][colIndex];
           const tileScore = tileScores[placedTile];
           const boardSpace = boardLayout[rowIndex][colIndex];
-          console.log(boardLayout)
           if (boardSpace === "3S") {
             sum += tileScore * 3; // multiply tile score by 3 if "3S" is present
           } else if (boardSpace === "2S") {
@@ -258,7 +319,7 @@ function App() {
     });
 
     setBoardToRender(newBoardToRender);
-    setTotalScore(getCurrentPlayScore());
+    setRoundScore(getCurrentPlayScore());
   }, [placedTiles, permaPlacedTiles])
 
   return (
@@ -315,6 +376,23 @@ function App() {
           <button className="hand-button" onClick={() => {handleSubmit()}}>Submit</button>
           <button className={`hand-button ${rerolling ? 'active' : ''}`} onClick={() => {setRerolling(!rerolling)}}>Reroll</button>
         </div>
+
+        <table className="score-table">
+          <thead>
+            <tr>
+              <th>Round</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {roundScores.map((score, index) => (
+              <tr key={index}>
+                <td>{index + 1}</td>
+                <td>{score}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
