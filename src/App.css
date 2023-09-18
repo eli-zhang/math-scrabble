@@ -153,6 +153,7 @@ body {
   width: 103.55mm;
   height: 103.55mm;
 }
+
 .hand .tile {
   background-color: rgb(245, 207, 144);
   background-image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/49914/veneer-birch-texture-fs8.png');
@@ -448,4 +449,22 @@ body {
 .hand .tile.used {
   background-color: gray;
   pointer-events: none;
+}
+
+.hand-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px; /* Add some space above the buttons */
+  width: 100%; /* Make the buttons container span the full width of the hand */
+}
+
+.hand-button {
+  flex: 1;
+  margin: 0 5px; /* Add some space between the buttons */
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+  height: 50px;
+}
+
+.hand-button:hover {
+  cursor: pointer;
 }

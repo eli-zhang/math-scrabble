@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import './App.css';
 import { tileCounts, tileScores } from './tileInfo'
 import { configureTiles } from './generateTiles';
+import { validate } from 'json-schema';
 
 function App() {
   useEffect(() => {
@@ -46,6 +47,7 @@ function App() {
   const [boardToRender, setBoardToRender] = React.useState<string[][]>(boardLayout);
   const [pendingTilePositions, setPendingTilePositions] = React.useState<boolean[][]>(initialTilePositions);
   const [totalScore, setTotalScore] = React.useState<number>(0);
+  const [currSelectedIdx, setCurrSelectedIdx] = React.useState<number>(-1);
 
   function deepCopy(arr: any[]) {
     let copy: any[] = [];
@@ -62,7 +64,7 @@ function App() {
   const handleTileInHandClick = (letter: string, index: number) => {
     if (!usedTilesInHandIdx.includes(index)) {
       setSelectedTile(letter);
-      setUsedTilesInHandIdx([...usedTilesInHandIdx, index]);
+      setCurrSelectedIdx(index);
     }
     setSelectedTile(letter);
   };
@@ -86,20 +88,66 @@ function App() {
     }
   }
 
+  const handleReset = () => {
+    const newPlacedTiles = deepCopy(placedTiles);
+    const newPendingTilePositions = deepCopy(initialTilePositions);
+  
+    pendingTilePositions.forEach((row, rowIndex) => {
+      row.forEach((pendingTile, colIndex) => {
+        if (pendingTile) {
+          newPlacedTiles[rowIndex][colIndex] = "";
+        }
+      });
+    });
+  
+    setPlacedTiles(newPlacedTiles);
+    setPendingTilePositions(newPendingTilePositions);
+    setUsedTilesInHandIdx([]);
+  }
+
   const tilePendingOnBoard = (rowIndex: number, colIndex: number) => {
     return pendingTilePositions[rowIndex][colIndex];
   }
 
+  const validatePendingTilePositions = (newPendingTilePositions: boolean[][]) => {
+    let foundRow = -1;
+    let foundCol = -1;
+    for (let row = 0; row < newPendingTilePositions.length; row++) {
+      for (let col = 0; col < newPendingTilePositions[0].length; col++) {
+        if (newPendingTilePositions[row][col]) {
+          if (foundRow === -1 && foundCol === -1) { // Haven't located the first tile
+            foundRow = row;
+            foundCol = col;
+          } else if (foundRow === row) {  // Keep going, but only check the row
+            foundCol = -1;
+          } else if (foundCol === col) {  // Keep going, but only check the column
+            foundRow = -1;
+          } else {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   const handleCellClick = (rowIndex: number, colIndex: number) => {
     if (selectedTile) {
+      const newPendingTilePositions = deepCopy(pendingTilePositions);
+      newPendingTilePositions[rowIndex][colIndex] = true;
+
+      if (!validatePendingTilePositions(newPendingTilePositions)) {
+        return;
+      }
+      setPendingTilePositions(newPendingTilePositions);
+
       const newPlacedTiles = [...placedTiles];
       newPlacedTiles[rowIndex][colIndex] = selectedTile;
+
       setPlacedTiles(newPlacedTiles);
       setSelectedTile(null);
-
-      const newPendingTilePositions = [...pendingTilePositions];
-      newPendingTilePositions[rowIndex][colIndex] = true;
-      setPendingTilePositions(newPendingTilePositions);
+      setUsedTilesInHandIdx([...usedTilesInHandIdx, currSelectedIdx]);
+      setCurrSelectedIdx(-1);
     }
   };
 
@@ -178,9 +226,9 @@ function App() {
         </div>
       </div>
 
-      <div>
+      {/* <div className="score">
         Total score: {totalScore}
-      </div>
+      </div> */}
 
       <div className="hand">
         {currentHand.map((tile, index) => {
@@ -193,6 +241,12 @@ function App() {
               onClick={() => handleTileInHandClick(tile, index)}
             />
           )})}
+
+        <div className="hand-buttons">
+          <button className="hand-button" onClick={() => {handleReset()}}>Reset</button>
+          <button className="hand-button">Submit</button>
+          <button className="hand-button">Reroll</button>
+        </div>
       </div>
     </div>
   );
