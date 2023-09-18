@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/math-scrabble/static/css/main.1a1c4633.css",
-    "main.js": "/math-scrabble/static/js/main.83804543.js",
+    "main.js": "/math-scrabble/static/js/main.6a3175b9.js",
     "static/js/787.3f943ca4.chunk.js": "/math-scrabble/static/js/787.3f943ca4.chunk.js",
     "index.html": "/math-scrabble/index.html",
     "main.1a1c4633.css.map": "/math-scrabble/static/css/main.1a1c4633.css.map",
-    "main.83804543.js.map": "/math-scrabble/static/js/main.83804543.js.map",
+    "main.6a3175b9.js.map": "/math-scrabble/static/js/main.6a3175b9.js.map",
     "787.3f943ca4.chunk.js.map": "/math-scrabble/static/js/787.3f943ca4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.1a1c4633.css",
-    "static/js/main.83804543.js"
+    "static/js/main.6a3175b9.js"
   ]
 }
