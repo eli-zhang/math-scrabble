@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import './App.css';
 import { tileCounts, tileScores } from './tileInfo'
 import { configureTiles } from './generateTiles';
-import { validate } from 'json-schema';
+import { createLobby, loadGameLobby, submitMove, GameState } from './networking'
 
 function App() {
   useEffect(() => {
@@ -53,6 +53,7 @@ function App() {
 
   const [tileIdxsToReroll, setTileIdxsToReroll] = React.useState<number[]>([]);
   const [rerolling, setRerolling] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState<boolean>(false);
 
   function deepCopy(arr: any[]) {
     let copy: any[] = [];
@@ -271,6 +272,8 @@ function App() {
     setUsedTilesInHandIdx([]);
     setPlacedTiles(initialPlacedTiles);
     setPendingTilePositions(initialTilePositions);
+
+    createLobby(new GameState(permaPlacedTiles, currentHand));
   }
 
   const getCurrentPlayScore = () => {
@@ -298,6 +301,28 @@ function App() {
       });
     });
     return sum * multiplier;
+  }
+
+  const handleNewGame = async () => {
+    let permaPlacedTiles = deepCopy(initialPlacedTiles);
+    let startingHand = ["="].concat(allTiles.sort(() => Math.random() - 0.5).slice(0, 9));
+    setLoading(true);
+    await createLobby(
+      new GameState(permaPlacedTiles, startingHand)
+    );
+    setLoading(false);
+
+  }
+
+  const handleLoadGame = async () => {
+    const gameCode = prompt("Enter game code:");
+    setLoading(true);
+    if (gameCode) {
+      let lobbyData = await loadGameLobby(gameCode);
+      setPermaPlacedTiles(lobbyData.permaPlacedTiles);
+      setCurrentHand(lobbyData.currentHand);
+    }
+    setLoading(false);
   }
   
   React.useEffect(() => {
@@ -329,7 +354,7 @@ function App() {
           {boardToRender.map((row, rowIndex) =>{
             return row.map((cellContent, colIndex) => {
 
-              if (!specialTiles.has(cellContent) && cellContent != "") {
+              if (!specialTiles.has(cellContent) && cellContent !== "") {
                 // Render a tile on the board instead.
                 return (
                   <div 
@@ -354,10 +379,6 @@ function App() {
         })}
         </div>
       </div>
-
-      {/* <div className="score">
-        Total score: {totalScore}
-      </div> */}
 
       <div className="hand">
         {currentHand.map((tile, index) => {
@@ -393,6 +414,11 @@ function App() {
             ))}
           </tbody>
         </table>
+
+        <div className="hand-buttons">
+          <button className="hand-button" onClick={() => {handleNewGame()}}>New Game</button>
+          <button className="hand-button" onClick={() => {handleLoadGame()}}>Load Game</button>
+        </div>
       </div>
     </div>
   );
