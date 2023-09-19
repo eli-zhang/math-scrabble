@@ -6,10 +6,12 @@ const BASE_URL = 'https://z281inf0ak.execute-api.us-east-1.amazonaws.com'; // re
 export class GameState {
     permaPlacedTiles: string[][];
     currentHand: string[];
+    roundScores: number[];
 
-    constructor(permaPlacedTiles: string[][], currentHand: string[]) {
+    constructor(permaPlacedTiles: string[][], currentHand: string[], roundScores: number[]) {
         this.permaPlacedTiles = permaPlacedTiles;
         this.currentHand = currentHand;
+        this.roundScores = roundScores;
     }
 }
 

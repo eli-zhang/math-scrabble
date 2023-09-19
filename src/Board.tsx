@@ -42,6 +42,7 @@ function Board() {
   });
   
   const [currentHand, setCurrentHand] = React.useState<string[]>("LOADING...".split(""));
+
   const [usedTilesInHandIdx, setUsedTilesInHandIdx] = React.useState<number[]>([]);
 
   const specialTiles = new Set(["3E", "3S", "2S", "2E"]);
@@ -238,7 +239,8 @@ function Board() {
     }
   
     return {
-        success: true
+        success: true,
+        reason: "yes"
     }
   }
 
@@ -323,6 +325,7 @@ function Board() {
   const getCurrentPlayScore = () => {
     let sum = 0;
     let multiplier = 1; // initialize multiplier to 1
+    let bonus = 0;
     pendingTilePositions.forEach((row, rowIndex) => {
       row.forEach((isPending, colIndex) => {
         if (isPending) {
@@ -344,7 +347,18 @@ function Board() {
         }
       });
     });
-    return sum * multiplier;
+    
+    let foundAll = true;
+    for (let i = 1; i <= 9; i++) {
+        if (!usedTilesInHandIdx.includes(i)) {
+            foundAll = false;
+            break;
+        }
+    }
+    if (foundAll) {
+        bonus = 40;
+    }
+    return sum * multiplier + bonus;
   }
 
   const handleNewGame = async () => {
@@ -352,7 +366,7 @@ function Board() {
     let startingHand = ["="].concat(allTiles.sort(() => Math.random() - 0.5).slice(0, 9));
     setLoading(true);
     let { gameId } = await createLobby(
-      new GameState(deepCopy(initialPlacedTiles), startingHand)
+      new GameState(deepCopy(initialPlacedTiles), startingHand, [])
     );
     navigate(`/${gameId}/1`)
     setLoading(false);
@@ -392,7 +406,7 @@ function Board() {
 
     React.useEffect(() => {
         if (isMounted.current && !loading && gameId) {
-            submitMove(gameId, new GameState(permaPlacedTiles, currentHand));
+            submitMove(gameId, new GameState(permaPlacedTiles, currentHand, roundScores));
         } else {
             isMounted.current = true;
         }
@@ -408,9 +422,24 @@ function Board() {
                 setLoading(false);
                 setPermaPlacedTiles(lobbyData.permaPlacedTiles);
                 setCurrentHand(lobbyData.currentHand);
+                setRoundScores(lobbyData.roundScores)
             }
         };
         fetchData();
+
+        // Uncomment when enabling two player mode
+        // const pollingInterval = setInterval(async () => {
+        //     if (gameId) {
+        //         let lobbyData = await loadGame(gameId);
+        //         setPermaPlacedTiles(lobbyData.permaPlacedTiles);
+        //         setCurrentHand(lobbyData.currentHand);
+        //         setRoundScores(lobbyData.roundScores);
+        //     }
+        // }, 5000);
+    
+        // return () => {
+        //     clearInterval(pollingInterval);
+        // };
     }, []);
 
   return (
