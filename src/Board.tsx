@@ -35,11 +35,13 @@ function Board() {
   const { gameId, playerId } = useParams<{ gameId: string, playerId: string }>();
   const navigate = useNavigate();
 
+  const isMounted = React.useRef(false);
+
   const allTiles = Object.entries(tileCounts).flatMap(([key, val]) => {
     return Array(val).fill(key);
   });
-
-  const [currentHand, setCurrentHand] = React.useState<string[]>(["="].concat(allTiles.sort(() => Math.random() - 0.5).slice(0, 9)));
+  
+  const [currentHand, setCurrentHand] = React.useState<string[]>("LOADING...".split(""));
   const [usedTilesInHandIdx, setUsedTilesInHandIdx] = React.useState<number[]>([]);
 
   const specialTiles = new Set(["3E", "3S", "2S", "2E"]);
@@ -57,7 +59,7 @@ function Board() {
 
   const [tileIdxsToReroll, setTileIdxsToReroll] = React.useState<number[]>([]);
   const [rerolling, setRerolling] = React.useState<boolean>(false);
-  const [loading, setLoading] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState<boolean>(true);
 
   function deepCopy(arr: any[]) {
     let copy: any[] = [];
@@ -141,12 +143,48 @@ function Board() {
           } else if (foundCol === col) {  // Keep going, but only check the column
             foundRow = -1;
           } else {
-            return false;
+            return {
+                success: false
+            };
           }
         }
       }
     }
-    return true;
+    return {
+        success: true,
+        rowToCheck: foundRow,
+        colToCheck: foundCol
+    };
+  }
+
+  const evaluateGroup = (group: string[]) => {
+    if (group.length > 1)  {
+        if (!group.includes("=")) {
+            return { 
+                success: false,
+                reason: "you are missing an ="
+            }
+        } else {
+            try {
+                let correct = eval(group.join("").replace(/=/g, '===').replace(/÷/g, '/').replace(/×/g, '*')); 
+                if (!correct) {
+                    return {
+                        success: false,
+                        reason: "equation is not true"
+                    }
+                }
+            } catch {
+                console.log("failure")
+                return {
+                    success: false,
+                    reason: "equation is malformed"
+                }
+            }
+        }
+    }
+    return {
+        success: true
+    }
   }
 
   const validateRowColumn = () => {
@@ -159,47 +197,49 @@ function Board() {
       });
     });
 
-    for (let row = 0; row < allPlacedTiles.length; row++) {
-      let trueCount = pendingTilePositions[row].filter(val => val === true).length;
-      if (trueCount > 1) {
+    let linesToCheckInfo = validatePendingTilePositions(pendingTilePositions)
+    let { rowToCheck, colToCheck } = linesToCheckInfo
+    if (rowToCheck && rowToCheck !== -1) {
         let group = [];
         for (let col = 0; col < allPlacedTiles[0].length; col++) {
-          if (placedTiles[row][col] !== "") {
-            group.push(allPlacedTiles[row][col]);
-          } else {
-            if (group.length > 0 && !group.includes("=")) {
-              return false;
+            if (allPlacedTiles[rowToCheck][col] !== "") {
+                group.push(allPlacedTiles[rowToCheck][col]);
+            } else {
+                let evaluation = evaluateGroup(group);
+                if (!evaluation.success) {
+                    return evaluation
+                }
+                group = [];
             }
-            group = [];
-          }
         }
-        if (group.length > 0 && !group.includes("=")) {
-          return false;
+        let evaluation = evaluateGroup(group);
+        if (!evaluation.success) {
+            return evaluation
         }
-      }
     }
   
-    for (let col = 0; col < allPlacedTiles[0].length; col++) {
-      let trueCount = pendingTilePositions.reduce((count, row) => row[col] ? count + 1 : count, 0);
-      if (trueCount > 1) {
+    if (colToCheck && colToCheck !== -1) {
         let group = [];
         for (let row = 0; row < allPlacedTiles.length; row++) {
-          if (allPlacedTiles[row][col] !== "") {
-            group.push(allPlacedTiles[row][col]);
+          if (allPlacedTiles[row][colToCheck] !== "") {
+            group.push(allPlacedTiles[row][colToCheck]);
           } else {
-            if (group.length > 1 && !group.includes("=")) {
-              return false;
+            let evaluation = evaluateGroup(group);
+            if (!evaluation.success) {
+                return evaluation
             }
             group = [];
           }
         }
-        if (group.length > 1 && !group.includes("=")) {
-          return false;
+        let evaluation = evaluateGroup(group);
+        if (!evaluation.success) {
+            return evaluation
         }
-      }
     }
   
-    return true;
+    return {
+        success: true
+    }
   }
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
@@ -207,7 +247,7 @@ function Board() {
       const newPendingTilePositions = deepCopy(pendingTilePositions);
       newPendingTilePositions[rowIndex][colIndex] = true;
 
-      if (!validatePendingTilePositions(newPendingTilePositions)) {
+      if (!validatePendingTilePositions(newPendingTilePositions).success) {
         return;
       }
       setPendingTilePositions(newPendingTilePositions);
@@ -256,8 +296,10 @@ function Board() {
       return;
     }
 
-    if (!validateRowColumn()) {
-      alert("Each group of tiles must contain an '=' tile.");
+    const result = validateRowColumn();
+
+    if (!result.success) {
+      alert(`Illegal move: ${result.reason}`);
       return;
     }
 
@@ -276,9 +318,6 @@ function Board() {
     setUsedTilesInHandIdx([]);
     setPlacedTiles(initialPlacedTiles);
     setPendingTilePositions(initialTilePositions);
-    if (gameId) {
-        submitMove(gameId, new GameState(permaPlacedTiles, currentHand));
-    }
   }
 
   const getCurrentPlayScore = () => {
@@ -309,11 +348,11 @@ function Board() {
   }
 
   const handleNewGame = async () => {
-    let permaPlacedTiles = deepCopy(initialPlacedTiles);
+    console.log("initial tiles", initialPlacedTiles)
     let startingHand = ["="].concat(allTiles.sort(() => Math.random() - 0.5).slice(0, 9));
     setLoading(true);
     let { gameId } = await createLobby(
-      new GameState(permaPlacedTiles, startingHand)
+      new GameState(deepCopy(initialPlacedTiles), startingHand)
     );
     navigate(`/${gameId}/1`)
     setLoading(false);
@@ -352,15 +391,27 @@ function Board() {
   }, [placedTiles, permaPlacedTiles])
 
     React.useEffect(() => {
+        if (isMounted.current && !loading && gameId) {
+            submitMove(gameId, new GameState(permaPlacedTiles, currentHand));
+        } else {
+            isMounted.current = true;
+        }
+    }, [permaPlacedTiles])
+    
+
+    React.useEffect(() => {
         const fetchData = async () => {
             if (gameId) {
+                isMounted.current = false;
+                setLoading(true);
                 let lobbyData = await loadGame(gameId);
+                setLoading(false);
                 setPermaPlacedTiles(lobbyData.permaPlacedTiles);
                 setCurrentHand(lobbyData.currentHand);
             }
         };
         fetchData();
-    }, [gameId, playerId]);
+    }, []);
 
   return (
     <div className="App">

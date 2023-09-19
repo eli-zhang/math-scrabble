@@ -22,7 +22,7 @@ export const loadGame = async (gameId: string) => {
             'Access-Control-Allow-Headers': 'Content-Type'
         }
     });
-    return JSON.parse(response.data);
+    return JSON.parse(response.data.game_state);
   } catch (error) {
     console.error('Error loading game lobby:', error);
     throw error;
@@ -50,7 +50,7 @@ export const createLobby = async (gameState: GameState) => {
 
 export const submitMove = async (gameId: string, gameState: GameState) => {
   try {
-    const response = await axios.put(`${BASE_URL}/mathScrabble/`, {
+    const response = await axios.put(`${BASE_URL}/mathScrabble`, {
         gameId: gameId,
         gameState: JSON.stringify(gameState)
     }, {
