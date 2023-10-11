@@ -42,7 +42,7 @@ function Board() {
   });
   const [currentPlayer, setCurrentPlayer] = React.useState<number>(1);
   const [currentHand, setCurrentHand] = React.useState<string[]>("LOADING...".split(""));
-
+  const [otherPlayerHand, setOtherPlayerHand] = React.useState<string[]>("LOADING...".split(""));
   const [usedTilesInHandIdx, setUsedTilesInHandIdx] = React.useState<number[]>([]);
 
   const specialTiles = new Set(["3E", "3S", "2S", "2E"]);
@@ -72,6 +72,25 @@ function Board() {
       }
     });
     return copy;
+  }
+
+  function shuffle(array: any[]) {
+    let currentIndex = array.length, temporaryValue, randomIndex;
+  
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+  
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+  
+      // And swap it with the current element.
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+  
+    return array;
   }
 
   const handleTileInHandClick = (letter: string, index: number) => {
@@ -183,8 +202,6 @@ function Board() {
                 }
                 return element;
               });
-
-              console.log(group);
 
               let correct = eval(group.join("").replace(/=/g, '===').replace(/÷/g, '/').replace(/×/g, '*')); 
               if (!correct) {
@@ -397,10 +414,11 @@ function Board() {
   }
 
   const handleNewGame = async () => {
-    let startingHand = ["="].concat(allTiles.sort(() => Math.random() - 0.5).slice(0, 9));
+    let startingHand = ["="].concat(shuffle(allTiles).slice(0, 9));
+    let otherPlayerStartingHand = ["="].concat(shuffle(allTiles).slice(0, 9));
     setLoading(true);
     let { gameId } = await createLobby(
-      new GameState(deepCopy(initialPlacedTiles), startingHand, [], 1)
+      new GameState(deepCopy(initialPlacedTiles), startingHand, otherPlayerStartingHand, [], 1)
     );
     navigate(`/${gameId}/1`)
     setLoading(false);
@@ -440,12 +458,13 @@ function Board() {
 
     React.useEffect(() => {
         if (isMounted.current && !loading && gameId) {
-            submitMove(gameId, new GameState(permaPlacedTiles, currentHand, roundScores, currentPlayer));
+          const player1Hand = playerId == "1" ? currentHand : otherPlayerHand;
+          const player2Hand = playerId == "1" ? otherPlayerHand : currentHand;
+          submitMove(gameId, new GameState(permaPlacedTiles, player1Hand, player2Hand, roundScores, currentPlayer));
         } else {
             isMounted.current = true;
         }
     }, [permaPlacedTiles])
-    
 
     React.useEffect(() => {
         const fetchData = async () => {
@@ -455,9 +474,11 @@ function Board() {
                 let lobbyData = await loadGame(gameId);
                 setLoading(false);
                 setPermaPlacedTiles(lobbyData.permaPlacedTiles);
-                setCurrentHand(lobbyData.currentHand);
+                setCurrentHand(playerId == "1" ? lobbyData.player1Hand : lobbyData.player2Hand);
+                setOtherPlayerHand(playerId == "1" ? lobbyData.player2Hand : lobbyData.player1Hand);
                 setCurrentPlayer(lobbyData.currentPlayer);
-                setRoundScores(lobbyData.roundScores)
+                setRoundScores(lobbyData.roundScores);
+                setUsedTilesInHandIdx([]);
             }
         };
         fetchData();
@@ -475,8 +496,7 @@ function Board() {
         // return () => {
         //     clearInterval(pollingInterval);
         // };
-        console.log(currentPlayer, playerId);
-    }, []);
+    }, [playerId, gameId]);
 
   return (
     <div className="App">

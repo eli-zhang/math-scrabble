@@ -5,13 +5,15 @@ const BASE_URL = 'https://z281inf0ak.execute-api.us-east-1.amazonaws.com'; // re
 
 export class GameState {
     permaPlacedTiles: string[][];
-    currentHand: string[];
+    player1Hand: string[];
+    player2Hand: string[];
     roundScores: Array<{round: number, player: number, score: number}>;
     currentPlayer: number;
 
-    constructor(permaPlacedTiles: string[][], currentHand: string[], roundScores: Array<{round: number, player: number, score: number}>, currentPlayer: number) {
+    constructor(permaPlacedTiles: string[][], player1Hand: string[], player2Hand: string[], roundScores: Array<{round: number, player: number, score: number}>, currentPlayer: number) {
         this.permaPlacedTiles = permaPlacedTiles;
-        this.currentHand = currentHand;
+        this.player1Hand = player1Hand;
+        this.player2Hand = player2Hand;
         this.roundScores = roundScores;
         this.currentPlayer = currentPlayer;
     }
