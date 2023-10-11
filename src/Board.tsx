@@ -40,7 +40,7 @@ function Board() {
   const allTiles = Object.entries(tileCounts).flatMap(([key, val]) => {
     return Array(val).fill(key);
   });
-  
+  const [currentPlayer, setCurrentPlayer] = React.useState<number>(1);
   const [currentHand, setCurrentHand] = React.useState<string[]>("LOADING...".split(""));
 
   const [usedTilesInHandIdx, setUsedTilesInHandIdx] = React.useState<number[]>([]);
@@ -56,7 +56,7 @@ function Board() {
   const [pendingTilePositions, setPendingTilePositions] = React.useState<boolean[][]>(initialTilePositions);
   const [currSelectedIdx, setCurrSelectedIdx] = React.useState<number>(-1);
   const [roundScore, setRoundScore] = React.useState<number>(0);
-  const [roundScores, setRoundScores] = React.useState<number[]>([]);
+  const [roundScores, setRoundScores] = React.useState<Array<{round: number, player: number, score: number}>>([]);
 
   const [tileIdxsToReroll, setTileIdxsToReroll] = React.useState<number[]>([]);
   const [rerolling, setRerolling] = React.useState<boolean>(false);
@@ -167,6 +167,15 @@ function Board() {
             }
         } else {
             try {
+              for (let i = 0; i < group.length - 1; i++) {
+                if (group[i + 1].includes("/") && !isNaN(Number(group[i]))) {
+                  const [numerator, denominator] = group[i + 1].split("/");
+                  const fractionValue = Number(numerator) / Number(denominator);
+                  group[i] = String(Number(group[i]) + fractionValue);
+                  group.splice(i + 1, 1);
+                }
+              }
+
               group = group.map(element => {
                 if (element.includes("/")) {
                   const [numerator, denominator] = element.split("/");
@@ -175,23 +184,15 @@ function Board() {
                 return element;
               });
 
-              console.log(group)
-              for (let i = 0; i < group.length - 1; i++) {
-                if (group[i + 1].includes(".") && !isNaN(Number(group[i]))) {
-                  group[i] = String(Number(group[i]) + Number(group[i + 1]));
-                  group.splice(i + 1, 1);
-                }
+              console.log(group);
+
+              let correct = eval(group.join("").replace(/=/g, '===').replace(/÷/g, '/').replace(/×/g, '*')); 
+              if (!correct) {
+                  return {
+                      success: false,
+                      reason: "equation is not true"
+                  }
               }
-
-              console.log("evaluating expression: ", group.join("").replace(/=/g, '===').replace(/÷/g, '/').replace(/×/g, '*'))
-
-                let correct = eval(group.join("").replace(/=/g, '===').replace(/÷/g, '/').replace(/×/g, '*')); 
-                if (!correct) {
-                    return {
-                        success: false,
-                        reason: "equation is not true"
-                    }
-                }
             } catch {
                 return {
                     success: false,
@@ -306,11 +307,21 @@ function Board() {
   }
 
   const handleSubmit = () => {
+    if (!isNaN(Number(playerId)) && Number(playerId) !== currentPlayer) {
+      console.log(currentPlayer);
+      alert(`It's not your turn! Player ${currentPlayer} should go now.`);
+      return;
+    }
+
+    const maxRoundForCurrentPlayer = Math.max(...roundScores.filter(scoreObj => scoreObj.player === currentPlayer).map(scoreObj => scoreObj.round), 0);
+    
     if (rerolling) {
+      setRoundScores([...roundScores, {round: maxRoundForCurrentPlayer + 1, player: currentPlayer, score: 0}]);
+
       handleReroll();
       setRerolling(false);
       handleReset();
-      setRoundScores([...roundScores, 0]);
+      setCurrentPlayer(currentPlayer == 1 ? 2 : 1);
       return;
     }
 
@@ -331,11 +342,13 @@ function Board() {
       newHand[index] = newTile;
     });
     setCurrentHand(newHand);
-    setRoundScores([...roundScores, roundScore]);
+    setRoundScores([...roundScores, {round: maxRoundForCurrentPlayer + 1, player: currentPlayer, score: roundScore}]);
+
     lockInPlacedTiles();
     setUsedTilesInHandIdx([]);
     setPlacedTiles(initialPlacedTiles);
     setPendingTilePositions(initialTilePositions);
+    setCurrentPlayer(currentPlayer == 1 ? 2 : 1);
   }
 
   const getCurrentPlayScore = () => {
@@ -387,7 +400,7 @@ function Board() {
     let startingHand = ["="].concat(allTiles.sort(() => Math.random() - 0.5).slice(0, 9));
     setLoading(true);
     let { gameId } = await createLobby(
-      new GameState(deepCopy(initialPlacedTiles), startingHand, [])
+      new GameState(deepCopy(initialPlacedTiles), startingHand, [], 1)
     );
     navigate(`/${gameId}/1`)
     setLoading(false);
@@ -427,7 +440,7 @@ function Board() {
 
     React.useEffect(() => {
         if (isMounted.current && !loading && gameId) {
-            submitMove(gameId, new GameState(permaPlacedTiles, currentHand, roundScores));
+            submitMove(gameId, new GameState(permaPlacedTiles, currentHand, roundScores, currentPlayer));
         } else {
             isMounted.current = true;
         }
@@ -443,6 +456,7 @@ function Board() {
                 setLoading(false);
                 setPermaPlacedTiles(lobbyData.permaPlacedTiles);
                 setCurrentHand(lobbyData.currentHand);
+                setCurrentPlayer(lobbyData.currentPlayer);
                 setRoundScores(lobbyData.roundScores)
             }
         };
@@ -461,6 +475,7 @@ function Board() {
         // return () => {
         //     clearInterval(pollingInterval);
         // };
+        console.log(currentPlayer, playerId);
     }, []);
 
   return (
@@ -518,14 +533,16 @@ function Board() {
           <thead>
             <tr>
               <th>Round</th>
+              <th>Player</th>
               <th>Score</th>
             </tr>
           </thead>
           <tbody>
-            {roundScores.map((score, index) => (
+            {roundScores.map((roundScore, index) => (
               <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{score}</td>
+                <td>{roundScore.round}</td>
+                <td>{roundScore.player}</td>
+                <td>{roundScore.score}</td>
               </tr>
             ))}
           </tbody>
@@ -541,3 +558,4 @@ function Board() {
 }
 
 export default Board;
+
