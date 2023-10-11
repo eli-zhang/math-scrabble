@@ -167,6 +167,24 @@ function Board() {
             }
         } else {
             try {
+              group = group.map(element => {
+                if (element.includes("/")) {
+                  const [numerator, denominator] = element.split("/");
+                  return String(Number(numerator) / Number(denominator));
+                }
+                return element;
+              });
+
+              console.log(group)
+              for (let i = 0; i < group.length - 1; i++) {
+                if (group[i + 1].includes(".") && !isNaN(Number(group[i]))) {
+                  group[i] = String(Number(group[i]) + Number(group[i + 1]));
+                  group.splice(i + 1, 1);
+                }
+              }
+
+              console.log("evaluating expression: ", group.join("").replace(/=/g, '===').replace(/÷/g, '/').replace(/×/g, '*'))
+
                 let correct = eval(group.join("").replace(/=/g, '===').replace(/÷/g, '/').replace(/×/g, '*')); 
                 if (!correct) {
                     return {
@@ -175,7 +193,6 @@ function Board() {
                     }
                 }
             } catch {
-                console.log("failure")
                 return {
                     success: false,
                     reason: "equation is malformed"
@@ -239,8 +256,7 @@ function Board() {
     }
   
     return {
-        success: true,
-        reason: "yes"
+        success: true
     }
   }
 
@@ -326,6 +342,12 @@ function Board() {
     let sum = 0;
     let multiplier = 1; // initialize multiplier to 1
     let bonus = 0;
+
+    // Find the row and column to check using validatePendingTilePositions
+    let linesToCheckInfo = validatePendingTilePositions(pendingTilePositions);
+    let { rowToCheck, colToCheck } = linesToCheckInfo;
+
+
     pendingTilePositions.forEach((row, rowIndex) => {
       row.forEach((isPending, colIndex) => {
         if (isPending) {
@@ -362,7 +384,6 @@ function Board() {
   }
 
   const handleNewGame = async () => {
-    console.log("initial tiles", initialPlacedTiles)
     let startingHand = ["="].concat(allTiles.sort(() => Math.random() - 0.5).slice(0, 9));
     setLoading(true);
     let { gameId } = await createLobby(
