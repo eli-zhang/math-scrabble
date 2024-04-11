@@ -177,8 +177,32 @@ function Board() {
     };
   }
 
-  const evaluateGroup = (group: string[]) => {
+  const evaluateGroup = (originalGroup: string[]) => {
+    let group = deepCopy(originalGroup)
+    while (group.includes(" ")) { 
+      const wildcardIndex = group.indexOf(" ");
+      const additionalWildcards = group.indexOf(" ", wildcardIndex + 1) > -1;
+      let userInput;
+      if (additionalWildcards) {
+        userInput = prompt("Please enter a value for the leftmost blank tile in your equation:");
+      } else {
+        userInput = prompt("Please enter a value for your blank tile:");
+      }
+      if (userInput && (Object.keys(tileCounts).includes(userInput) 
+        // We use a custom multiplication and division symbol which may not be what the user enters
+        || userInput === "*" || userInput === "/")) {
+        group[wildcardIndex] = userInput.replace(/\//g, '÷').replace(/\*/g, '×');
+      } else {
+        alert("Invalid tile. Please enter a tile that exists in the game.");
+        return {
+          success: false,
+          reason: "Invalid tile entered for wildcard."
+        }
+      }
+    }
+    
     if (group.length > 1)  {
+      console.log(group)
         if (!group.includes("=")) {
             return { 
                 success: false,
@@ -474,7 +498,8 @@ function Board() {
                 let lobbyData = await loadGame(gameId);
                 setLoading(false);
                 setPermaPlacedTiles(lobbyData.permaPlacedTiles);
-                setCurrentHand(playerId == "1" ? lobbyData.player1Hand : lobbyData.player2Hand);
+                setCurrentHand(["=", "1", "3", " ", " ", "1/3"])
+                // setCurrentHand(playerId == "1" ? lobbyData.player1Hand : lobbyData.player2Hand);
                 setOtherPlayerHand(playerId == "1" ? lobbyData.player2Hand : lobbyData.player1Hand);
                 setCurrentPlayer(lobbyData.currentPlayer);
                 setRoundScores(lobbyData.roundScores);
